@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100&display=swap" rel="stylesheet">
+    <link rel="shortcut icon" type="imagex/png" href="../img/logo_alimentaAcao.png">
+    <link rel="stylesheet" href="style/style.css"> 
+    <link rel="stylesheet" href="style/media.css">  
+    <title>Mapa</title>
+  
+</head>
+<body>
+    <header>
+        <div id="logo">
+            <img src="img/logo_completo.png" alt="logo">
+        </div> <!--logo-->
+        <ul>
+            <a href="index.html"><li>Início</li></a>
+            <a href="mapa.html"><li>Mapa</li></a>
+            <a href="contato.html"><li>Contato</li></a>
+        </ul>
+    </header>
+
+    <div id="map"></div>
+    <button onclick="getLocation()" id= "botao">Minha Localização</button>
+    <button onclick="addCustomMarker()" id="botao">Adicionar Marcador</button>
+
+    <script>
+        var map = L.map("map");
+        var markers = L.markerClusterGroup(); // Plugin MarkerCluster para agrupar marcadores próximos
+        var markerCount = 0;
+
+        function getLocation() {
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(function (position) {
+                    var latitude = position.coords.latitude;
+                    var longitude = position.coords.longitude;
+                    var userLocation = [latitude, longitude];
+
+                    map.setView(userLocation, 13); // Define o mapa para abrir na localização do usuário
+                    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                    }).addTo(map);
+
+                    map.addLayer(markers);
+
+                    map.on("click", function (e) {
+                        addMarker(e.latlng);
+                    });
+
+                    // Adicione um marcador para a localização do usuário
+                    var userMarker = L.marker(userLocation).bindPopup("Sua Localização");
+                    markers.addLayer(userMarker);
+                });
+            } else {
+                alert("Geolocalização não suportada em seu navegador.");
+            }
+        }
+
+        function addCustomMarker() {
+            // Simplesmente adiciona um marcador manualmente
+            var randomLat = Math.random() * 0.2 - 0.1 + map.getCenter().lat;
+            var randomLng = Math.random() * 0.2 - 0.1 + map.getCenter().lng;
+            var location = L.latLng(randomLat, randomLng);
+            addMarker(location);
+        }
+
+        function updateMarkerColor(marker) {
+            var popup = marker.getPopup();
+            var count = parseInt(popup.getContent().match(/\d+/));
+
+            if (count >= 5 && count <= 9) {
+                marker.setIcon(L.icon({ iconUrl: 'img/marcador_amarelo.png' }));
+            } else if (count >= 10 && count <= 14) {
+                marker.setIcon(L.icon({ iconUrl: 'img/marcador_laranja.png' }));
+            } else if (count > 14) {
+                marker.setIcon(L.icon({ iconUrl: 'img/marcador_vermelho.png' }));
+            }
+        }
+
+        function addMarker(location) {
+    var existingMarkers = markers.getLayers();
+    var markerExists = false;
+
+    existingMarkers.forEach(function (existingMarker) {
+        var markerLatLng = existingMarker.getLatLng();
+        if (markerLatLng.distanceTo(location) < 100) {
+            markerExists = true;
+            var popup = existingMarker.getPopup();
+            var count = parseInt(popup.getContent().match(/\d+/));
+            popup.setContent("Marcador " + (count + 1) + " pontos");
+            updateMarkerColor(existingMarker);
+        }
+    });
+
+    if (!markerExists) {
+        var marker = L.marker(location, {
+            icon: L.icon({
+                iconUrl: 'img/marcador_verde.png',
+                iconSize: [30, 40], // Ajuste o tamanho do ícone conforme necessário
+            })
+        }).bindPopup("Marcador 1 ponto");
+        markers.addLayer(marker);
+    }
+}
+
+   // Evento de zoom para redimensionar os marcadores
+   map.on('zoomend', function() {
+        markers.eachLayer(function(marker) {
+            var icon = marker.options.icon;
+            icon.options.iconSize = [30, 40]; // Ajuste o tamanho do ícone conforme necessário
+            marker.setIcon(icon);
+        });
+    });
+
+
+    </script>
+</body>
+</html>
+
+    </script>
+</body>
+</html>
